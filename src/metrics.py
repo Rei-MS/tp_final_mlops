@@ -15,6 +15,7 @@ from sklearn.metrics import (
     roc_curve,
     precision_recall_curve,
 )
+from sklearn.calibration import calibration_curve
 
 
 METRICS = {
@@ -23,6 +24,7 @@ METRICS = {
     "test_recall": recall_score,
     "test_f1": f1_score,
 }
+DISPLAY_LABELS = ["Neutral or Dissatisfied", "Satisfied"]
 
 
 def get_metrics(y_true: np.ndarray, y_pred: np.ndarray) -> dict[str, float]:
@@ -101,7 +103,7 @@ def get_fig_confusion_matrix(
         plt.Figure: Confusion matrix figure as a Matplotlib figure object.
     """
     if display_labels is None:
-        display_labels = ["neutral or dissatisfied", "satisfied"]
+        display_labels = DISPLAY_LABELS
 
     sns.set_theme(style="white") # Seaborn theme
     
@@ -186,7 +188,7 @@ def get_fig_pr_curve(
     Returns:
         plt.Figure: Precision-Recall curve as a Matplotlib figure object.
     """
-    sns.set_theme(style="whitegrid")
+    sns.set_theme(style="whitegrid") # Seaborn theme
 
     # PR curve metrics and PR-AUC score
     precision, recall, _ = precision_recall_curve(y_true, y_score)
@@ -216,6 +218,90 @@ def get_fig_pr_curve(
     ax.set_xlim([-0.01, 1.01])
     ax.set_ylim([-0.01, 1.01])
     ax.legend(loc="lower left", frameon=True, facecolor="white", edgecolor="none")
+
+    sns.despine(left=True, bottom=True)
+    fig.tight_layout()
+
+    return fig
+
+
+def get_fig_calibration_curve(
+    y_true: np.ndarray,
+    y_score: np.ndarray,
+    n_bins: int = 10,
+) -> plt.Figure:
+    """Creates the probability calibration curve figure.
+
+    Args:
+        y_true: Array of ground truth values.
+        y_score: Predicted probabilities or decision scores for the positive class.
+        n_bins: Number of bins in the plot. Defaults to 10.
+
+    Returns:
+        plt.Figure: Calibration curve as a Matplotlib figure object.
+    """
+    sns.set_theme(style="whitegrid") # Seaborn theme
+
+    prob_true, prob_pred = calibration_curve(y_true, y_score, n_bins=n_bins)
+
+    fig, ax = plt.subplots(figsize=(6, 5))
+    ax.plot(prob_pred, prob_true, marker="o", color="#2E86AB", linewidth=2.5, label="Model")
+    ax.plot([0, 1], [0, 1], color="gray", linestyle="--", linewidth=1.5, label="Perfect Calibration")
+
+    ax.set_title("Calibration Curve", fontsize=12, fontweight="bold", pad=12)
+    ax.set_xlabel("Mean Predicted Probability")
+    ax.set_ylabel("Fraction of Positives")
+    ax.legend(loc="lower right", frameon=True, facecolor="white", edgecolor="none")
+
+    sns.despine(left=True, bottom=True)
+    fig.tight_layout()
+
+    return fig
+
+
+def get_fig_prediction_distribution(
+    y_true: np.ndarray,
+    y_score: np.ndarray,
+    display_labels: list[str] | None = None,
+) -> plt.Figure:
+    """Creates the prediction probability distribution by class figure.
+
+    Args:
+        y_true: Array of ground truth values.
+        y_score: Predicted probabilities or decision scores for the positive class.
+        display_labels: Class names for labels. Defaults to neutral/satisfied.
+
+    Returns:
+        plt.Figure: Prediction probability distribution as a Matplotlib figure object.
+    """
+    sns.set_theme(style="whitegrid") # Seaborn theme
+
+    if display_labels is None:
+        display_labels = DISPLAY_LABELS
+    mapped_labels = np.array(display_labels)[y_true]
+
+    df = pd.DataFrame({
+        "Class": mapped_labels,
+        "Probability": y_score,
+    })
+
+    fig, ax = plt.subplots(figsize=(6, 5))
+    sns.kdeplot(
+        data=df,
+        x="Probability",
+        hue="Class",
+        hue_order=display_labels,
+        common_norm=False,
+        fill=True,
+        palette=["#E71D36", "#2E86AB"],
+        alpha=0.3,
+        linewidth=2,
+        ax=ax,
+    )
+
+    ax.set_title("Prediction Probability Distribution", fontsize=12, fontweight="bold", pad=12)
+    ax.set_xlabel("Predicted Probability")
+    ax.set_ylabel("Density")
 
     sns.despine(left=True, bottom=True)
     fig.tight_layout()
