@@ -4,5 +4,6 @@ Here's the project's model related logic. [luego lo desarrollamos bien, por ahor
 
 ## Modules
 
+- `dataload.py`: dataset loading and processing.
+- `metrics.py`: metric calculations and related figures.
 - `train.py`: train the model and log it to MLflow.
-- `evaluate.py`: evaluate the model and log it to MLflow.
