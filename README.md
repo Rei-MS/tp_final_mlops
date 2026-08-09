@@ -185,7 +185,6 @@ tp_final_mlops/
 │   └── test_dataload.py
 ├── .env.example
 ├── .gitignore
-├── pytest.ini
 ├── requirements.txt
 └── README.md
 ```
