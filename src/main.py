@@ -33,7 +33,8 @@ def main() -> None:
     df_test = load_dataset(TEST_PATH)
 
     X_train, y_train = get_features_targets(df_train)
-    X_test, y_test = get_features_targets(df_test)
+    X_test, y_test = get_features_targets(df_test,feature_columns=X_train.columns)
+
 
     result = train_random_forest(X_train, y_train, X_test, y_test, OPTUNA_TRIALS)
 
