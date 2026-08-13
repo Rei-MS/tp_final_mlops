@@ -29,4 +29,9 @@ MODEL_NAME = os.getenv(
 )
 TRACKING_URI = os.getenv("MLFLOW_TRACKING_URI", "http://127.0.0.1:5000")
 
-OPTUNA_TRIALS = 10
+OPTUNA_TRIALS = int(
+    os.getenv(
+        "OPTUNA_TRIALS",
+        "10",
+    )
+)

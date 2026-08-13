@@ -86,7 +86,7 @@ def train_random_forest(
                     y_train,
                     scoring="f1",
                     cv=3,
-                    n_jobs=-1,
+                    n_jobs=1,
                 )
 
                 score = float(scores.mean())
@@ -96,10 +96,14 @@ def train_random_forest(
                 mlflow.log_metric("f1_cv_std", score_std)
             return score
 
+        sampler = optuna.samplers.TPESampler(seed=RANDOM_STATE)
+
         study = optuna.create_study(
             direction="maximize",
             study_name="random_forest_optimization",
+            sampler=sampler
         )
+        
         study.optimize(
             objective,
             n_trials=n_trials,

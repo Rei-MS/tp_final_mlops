@@ -31,27 +31,33 @@ def load_dataset(path: str | Path) -> pd.DataFrame:
     )
 
 
-def get_features_targets(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.Series]:
-    """Separates features and target, and one-hot encodes categorical variables.
-
-    Args:
-        df: Input DataFrame containing features and 'satisfaction' target column.
-
-    Returns:
-        tuple[pd.DataFrame, pd.Series]: A tuple containing:
-            - X (pd.DataFrame): Processed feature matrix with dummy-encoded
-                                categorical columns.
-            - y (pd.Series): Binary target vector (1 for satisfied, 0 otherwise).
-
-    Notes:
-        Why do this is Random Forest algorithm accepts categorical features?
-                Scikit-learn's implementation can't yet:
-                https://github.com/scikit-learn/scikit-learn/pull/29437
-                July 2026 Update: But will soon!
-                https://github.com/scikit-learn/scikit-learn/pull/33354
-                We will stick to our old implementation since we know it works already.
+def get_features_targets(
+    df: pd.DataFrame,
+    feature_columns: list[str] | pd.Index | None = None,
+) -> tuple[pd.DataFrame, pd.Series]:
     """
-    y = df[TARGET_COLUMN].eq(TARGET_POS_LABEL).astype(int)
-    X = pd.get_dummies(df.drop(columns=[TARGET_COLUMN]), drop_first=True, dtype=int)
+    Separa features y target y realiza one-hot encoding.
+
+    Si se proporcionan feature_columns, alinea las columnas
+    resultantes con las columnas utilizadas durante train.
+    """
+
+    y = (
+        df[TARGET_COLUMN]
+        .eq(TARGET_POS_LABEL)
+        .astype(int)
+    )
+
+    X = pd.get_dummies(
+        df.drop(columns=[TARGET_COLUMN]),
+        drop_first=True,
+        dtype=int,
+    )
+
+    if feature_columns is not None:
+        X = X.reindex(
+            columns=list(feature_columns),
+            fill_value=0,
+        )
 
     return X, y
