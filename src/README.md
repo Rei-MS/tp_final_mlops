@@ -1,13 +1,19 @@
+[← Back to Root Documentation](../README.md)
+
 # `src`
 
-Here's the project's model related logic. [luego lo desarrollamos bien, por ahora dejamos lo principal]
+This directory contains the project's model related logic; dataset preprocessing, hyperparameter optimization, experiment tracking and model registration.
 
-## Modules
+## Structure
 
-- `config.py`: configuration variables.
-- `dataload.py`: dataset loading and processing.
-- `metrics.py`: metric calculation and related figures.
-- `train.py`: model training, optuna search, MLflow logging.
-- `tracking.py`: MLflow logging (features and figures).
-- `registry.py`: MLflow model registry (alias assignment).
-- `main.py`: main execution [remember to run from root directory].
+```text
+.
+├── config.py          # Configuration variables
+├── dataload.py        # Dataset loading and processing
+├── metrics.py         # Metric calculation and related figures
+├── train.py           # Model training, optuna search, MLflow logging
+├── tracking.py        # MLflow logging (features and figures)
+├── registry.py        # MLflow model registry (alias assignment)
+├── main.py            # Main execution - run from root.
+└── README.md
+```

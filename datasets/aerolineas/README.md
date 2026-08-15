@@ -1,3 +1,12 @@
 # `dataset/aerolineas`
 
-Here's the original dataset, which is already split into train and test sets.
+This directory contains the original dataset as `csv` files. It's already split into train and test sets.
+
+## Structure
+
+```text
+.
+├── test.csv   # Testing data
+├── train.csv  # Training data
+└── README.md
+```
