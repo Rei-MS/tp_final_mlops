@@ -7,10 +7,7 @@ def test_target_encoding():
     df = pd.DataFrame(
         {
             "Age": [20, 40],
-            "satisfaction": [
-                "satisfied",
-                "neutral or dissatisfied",
-            ],
+            "satisfaction": ["satisfied", "neutral or dissatisfied"],
         }
     )
 
@@ -23,30 +20,14 @@ def test_target_encoding():
 def test_train_test_columns_are_aligned():
     train_df = pd.DataFrame(
         {
-            "Gender": [
-                "Female",
-                "Male",
-                "Female",
-            ],
-            "Age": [
-                20,
-                40,
-                30,
-            ],
-            "satisfaction": [
-                "satisfied",
-                "neutral or dissatisfied",
-                "satisfied",
-            ],
+            "Gender": ["Female", "Male", "Female"],
+            "Age": [20, 40, 30],
+            "satisfaction": ["satisfied", "neutral or dissatisfied", "satisfied"],
         }
     )
 
     test_df = pd.DataFrame(
-        {
-            "Gender": ["Female"],
-            "Age": [25],
-            "satisfaction": ["satisfied"],
-        }
+        {"Gender": ["Female"], "Age": [25], "satisfaction": ["satisfied"]}
     )
 
     X_train, _ = get_features_targets(train_df)
