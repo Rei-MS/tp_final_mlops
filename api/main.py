@@ -16,6 +16,7 @@ from pydantic import BaseModel
 # Configuración
 # ============================================================
 
+
 MLFLOW_TRACKING_URI = os.getenv(
     "MLFLOW_TRACKING_URI",
     "http://127.0.0.1:5000",
@@ -43,10 +44,7 @@ PROJECT_ROOT = Path(
 TRAIN_PATH = Path(
     os.getenv(
         "TRAIN_PATH",
-        PROJECT_ROOT
-        / "datasets"
-        / "aerolineas"
-        / "train.csv",
+        PROJECT_ROOT / "datasets" / "aerolineas" / "train.csv",
     )
 )
 
@@ -60,6 +58,7 @@ DROP_COLUMNS = [
 # ============================================================
 # Variables globales cargadas al iniciar FastAPI
 # ============================================================
+
 
 model = None
 
@@ -76,6 +75,7 @@ model_feature_columns: list[str] = []
 # Modelos de entrada y salida
 # ============================================================
 
+
 class PredictionRequest(BaseModel):
     features: dict[str, Any]
 
@@ -90,6 +90,7 @@ class PredictionResponse(BaseModel):
 # ============================================================
 # Carga del esquema de entrenamiento
 # ============================================================
+
 
 def load_training_schema() -> None:
     """
@@ -113,23 +114,12 @@ def load_training_schema() -> None:
 
     raw_feature_columns = features.columns.tolist()
 
-    categorical_columns = (
-        features
-        .select_dtypes(
-            include=["object", "category"]
-        )
-        .columns
-        .tolist()
-    )
+    categorical_columns = features.select_dtypes(
+        include=["object", "category"]
+    ).columns.tolist()
 
     categorical_values = {
-        column: sorted(
-            features[column]
-            .dropna()
-            .astype(str)
-            .unique()
-            .tolist()
-        )
+        column: sorted(features[column].dropna().astype(str).unique().tolist())
         for column in categorical_columns
     }
 
@@ -137,6 +127,7 @@ def load_training_schema() -> None:
 # ============================================================
 # Preprocesamiento para inferencia
 # ============================================================
+
 
 def preprocess_features(
     features: dict[str, Any],
@@ -147,14 +138,9 @@ def preprocess_features(
     """
 
     if model is None:
-        raise RuntimeError(
-            "El modelo todavía no fue cargado."
-        )
-
+        raise RuntimeError("El modelo todavía no fue cargado.")
     missing_columns = [
-        column
-        for column in raw_feature_columns
-        if column not in features
+        column for column in raw_feature_columns if column not in features
     ]
 
     if missing_columns:
@@ -165,11 +151,8 @@ def preprocess_features(
                 "missing_columns": missing_columns,
             },
         )
-
     unknown_columns = [
-        column
-        for column in features
-        if column not in raw_feature_columns
+        column for column in features if column not in raw_feature_columns
     ]
 
     if unknown_columns:
@@ -180,8 +163,8 @@ def preprocess_features(
                 "unknown_columns": unknown_columns,
             },
         )
-
     # Validamos valores categóricos.
+
     for column in categorical_columns:
 
         value = str(features[column])
@@ -192,22 +175,18 @@ def preprocess_features(
             raise HTTPException(
                 status_code=422,
                 detail={
-                    "message": (
-                        f"Valor inválido para '{column}'."
-                    ),
+                    "message": (f"Valor inválido para '{column}'."),
                     "received": value,
                     "allowed": allowed_values,
                 },
             )
-
     # Creamos exactamente las columnas que espera
     # el Random Forest.
-    row = {
-        column: 0
-        for column in model_feature_columns
-    }
+
+    row = {column: 0 for column in model_feature_columns}
 
     # Variables numéricas.
+
     for column in raw_feature_columns:
 
         if column not in categorical_columns:
@@ -219,28 +198,22 @@ def preprocess_features(
                 if value is None:
                     raise HTTPException(
                         status_code=422,
-                        detail=(
-                            f"'{column}' no puede ser null."
-                        ),
+                        detail=(f"'{column}' no puede ser null."),
                     )
-
                 row[column] = value
-
     # Variables categóricas codificadas mediante
     # la misma convención de pd.get_dummies().
+
     for column in categorical_columns:
 
         value = str(features[column])
 
         prefix = f"{column}_"
 
-        dummy_column = (
-            prefix + value
-        )
+        dummy_column = prefix + value
 
         if dummy_column in row:
             row[dummy_column] = 1
-
     X = pd.DataFrame(
         [row],
         columns=model_feature_columns,
@@ -253,43 +226,30 @@ def preprocess_features(
 # Inicio de FastAPI
 # ============================================================
 
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
 
     global model
     global model_feature_columns
 
-    mlflow.set_tracking_uri(
-        MLFLOW_TRACKING_URI
-    )
+    mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
 
-    print(
-        f"Cargando modelo desde: {MODEL_URI}"
-    )
+    print(f"Cargando modelo desde: {MODEL_URI}")
 
-    model = mlflow.sklearn.load_model(
-        MODEL_URI
-    )
+    model = mlflow.sklearn.load_model(MODEL_URI)
 
     if not hasattr(
         model,
         "feature_names_in_",
     ):
-        raise RuntimeError(
-            "El modelo no contiene feature_names_in_."
-        )
-
-    model_feature_columns = list(
-        model.feature_names_in_
-    )
+        raise RuntimeError("El modelo no contiene feature_names_in_.")
+    model_feature_columns = list(model.feature_names_in_)
 
     load_training_schema()
 
     print("Modelo cargado correctamente.")
-    print(
-        f"Features del modelo: "
-        f"{len(model_feature_columns)}"
-    )
+    print(f"Features del modelo: " f"{len(model_feature_columns)}")
 
     yield
 
@@ -297,8 +257,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="Airline Satisfaction API",
     description=(
-        "API de predicción utilizando "
-        "el modelo champion registrado en MLflow."
+        "API de predicción utilizando " "el modelo champion registrado en MLflow."
     ),
     version="1.0.0",
     lifespan=lifespan,
@@ -309,13 +268,10 @@ app = FastAPI(
 # Endpoints
 # ============================================================
 
+
 @app.get("/")
 def root():
-    return {
-        "message": (
-            "Airline Satisfaction Prediction API"
-        )
-    }
+    return {"message": ("Airline Satisfaction Prediction API")}
 
 
 @app.get("/health")
@@ -338,23 +294,13 @@ def predict(
     Realiza una predicción de satisfacción.
     """
 
-    X = preprocess_features(
-        request.features
-    )
+    X = preprocess_features(request.features)
 
-    prediction = int(
-        model.predict(X)[0]
-    )
+    prediction = int(model.predict(X)[0])
 
-    probability = float(
-        model.predict_proba(X)[0][1]
-    )
+    probability = float(model.predict_proba(X)[0][1])
 
-    label = (
-        "satisfied"
-        if prediction == 1
-        else "neutral or dissatisfied"
-    )
+    label = "satisfied" if prediction == 1 else "neutral or dissatisfied"
 
     return PredictionResponse(
         prediction=prediction,

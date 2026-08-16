@@ -26,33 +26,19 @@ with DAG(
 
     train_model = BashOperator(
         task_id="train_random_forest",
-
         bash_command="python -m src.main",
-
         # Muy importante:
         # simula exactamente la ejecución desde el root.
         cwd=PROJECT_ROOT,
-
         env={
-            "MLFLOW_TRACKING_URI": (
-                "http://mlflow:5000"
-            ),
-
-            "MLFLOW_EXPERIMENT_NAME": (
-                "airline-satisfaction-v2"
-            ),
-
-            "MLFLOW_MODEL_NAME": (
-                "airline-satisfaction-"
-                "best-random-forest"
-            ),
-
+            "MLFLOW_TRACKING_URI": ("http://mlflow:5000"),
+            "MLFLOW_EXPERIMENT_NAME": ("airline-satisfaction-v2"),
+            "MLFLOW_MODEL_NAME": ("airline-satisfaction-" "best-random-forest"),
             "OPTUNA_TRIALS": os.getenv(
                 "OPTUNA_TRIALS",
                 "10",
             ),
             "PYTHONPATH": PROJECT_ROOT,
         },
-
         append_env=True,
     )
